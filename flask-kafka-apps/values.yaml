@@ -65,26 +65,22 @@ autoscaling:
   # targetMemoryUtilizationPercentage: 80
 
 
-modules:
-  flask-app-producer:
-    enabled: true
-    ingress:
-      enabled: false
-    image:
-      repository: repo-producer
-      tag: latest
-    port: 5000
-    replicas: 1
 
-  flask-app-consumer:
-    enabled: true
-    ingress:
-      enabled: false
-    image:
-      repository: repo-consumer
-      tag: latest
-    port: 5000
-    replicas: 1
+# Global configuration
+global:
+
+  namespace: "retrunbuild"
+
+  environment: prod
+  
+  imageTag: v1.1.0
+  
+  imagePullSecrets:
+    - name: retrunbuild
+  
+  labels:
+    app.kubernetes.io/part-of: retrunbuild-backend
+
 
 
 defaults:
@@ -101,38 +97,150 @@ defaults:
     maxReplicas: 4
     cpuUtilization: 80
     memoryUtilization: 80
-  healthCheck:
-    enabled: true
-    livenessProbe:
-      httpGet:
-        path: /health
-        port: 5000
-      initialDelaySeconds: 120  # Longer startup time
-      failureThreshold: 5
-    readinessProbe:
-      httpGet:
-        path: /health
-        port: 5000
-      initialDelaySeconds: 120
-      failureThreshold: 5
   secrets:
     - name: repo-secrets
 
+modules:
+  producer:
+    enabled: true
+    ingress:
+      enabled: false
+    image:
+      repository: repo-producer
+      tag: latest
+    port: 5000
+    replicas: 1
+
+    healthCheck:
+      enabled: true
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 5000
+        initialDelaySeconds: 120  
+        failureThreshold: 5
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 5000
+        initialDelaySeconds: 120
+        failureThreshold: 5
+
+  consumer:
+    enabled: true
+    ingress:
+      enabled: false
+    image:
+      repository: repo-consumer
+      tag: latest
+    port: 5000
+    replicas: 1
+    healthCheck:
+      enabled: true
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 5000
+        initialDelaySeconds: 120  
+        failureThreshold: 5
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 5000
+        initialDelaySeconds: 120
+        failureThreshold: 5
+
+  zookeeper:
+    enabled: true
+    ingress:
+      enabled: false
+    image:
+      repository: wurstmeister/zookeeper
+      tag: latest
+    port: 2181
+    replicas: 1
 
 
-# Global configuration
-global:
+  kafka:
+    enabled: true
+    ingress:
+      enabled: false
+    image:
+      repository: wurstmeister/kafka:2.13-2.8.1
+      tag: latest
+    port: 9092
+    replicas: 1
+    volume:
+      enabled: true
+      volumeMounts:
+        - name: kafka-storage
+          mountPath: /var/lib/kafka/data
+      volumes:
+        - name: kafka-storage
+          pvc:
+            enabled: true
+            claimName: kafka-data
+    envs:
+      enabled: true
+      envs:
+        - name: KAFKA_BROKER_ID
+          value: "1"
+        - name: KAFKA_ZOOKEEPER_CONNECT
+          value: zookeeper:2181
+        - name: KAFKA_LISTENERS
+          value: PLAINTEXT://0.0.0.0:9092
+        - name: KAFKA_ADVERTISED_LISTENERS
+          value: PLAINTEXT://kafka:9092
+        - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+          value: "1"
+        - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
+          value: "true"
 
-  namespace: "retrunbuild"
+  akhq:
+    enabled: true
+    ingress:
+      enabled: false
+    image:
+      repository: tchiotludo/akhq:0.24.0
+      tag: latest
+    port: 8080
+    replicas: 1
 
-  environment: prod
-  
-  imageTag: v1.1.0
-  
-  imagePullSecrets:
-    - name: retrunbuild
-  
-  labels:
-    app.kubernetes.io/part-of: retrunbuild-backend
+    volume:
+      enabled: true
+      volumeMounts:
+        - name: config
+          mountPath: /app/application.yml
+          subPath: application.yml
+      volumes:
+        - name: config
+          configMap:
+            name: akhq-config
+
+
+
+
+
+volumes:
+  - name: kafka-data
+    pvc:
+      enabled: true
+      claimName: kafka-data
+      
+configmaps:
+  - name: akhq-config
+    data:
+      AKHQ_CONFIGURATION: |
+        akhq:
+          connections:
+            docker-kafka:
+              properties:
+                bootstrap.servers: "kafka:9093"
+              zookeeper:
+                connect: "zookeeper:2181" 
+
+
+
+
 
 

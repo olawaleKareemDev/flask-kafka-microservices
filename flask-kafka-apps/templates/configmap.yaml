@@ -1,0 +1,10 @@
+{{- range $serviceName, $serviceConfig := .Values.configmaps }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $serviceName }}-config
+data:
+  {{ $serviceConfig.data | toYaml }}
+
+{{- end }}
