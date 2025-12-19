@@ -1,0 +1,121 @@
+############################
+# Python / Flask
+############################
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+wheels/
+pip-wheel-metadata/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Flask
+instance/
+.webassets-cache
+.flaskenv
+.env
+.env.*
+!.env.example
+
+# Python tooling
+.pytest_cache/
+.mypy_cache/
+.pyre/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+############################
+# Docker
+############################
+*.log
+docker-compose.override.yml
+docker-compose.*.yml
+Dockerfile.*
+!.dockerignore
+
+# Docker runtime data
+.docker/
+docker-data/
+containerd/
+
+############################
+# Kubernetes
+############################
+# Generated / local manifests
+k8s/generated/
+k8s/rendered/
+manifests/generated/
+
+# Secrets & sensitive configs
+**/*secret*.yaml
+**/*secret*.yml
+**/*secrets*.yaml
+**/*secrets*.yml
+
+# Kube configs
+.kube/
+kubeconfig
+kubeconfig-*
+
+############################
+# Helm
+############################
+charts/**/charts/
+charts/**/tmp/
+charts/**/requirements.lock
+charts/**/Chart.lock
+charts/**/.helmignore
+.helm/
+.helm-cache/
+.helm-repository/
+
+# Helm rendered output
+helm-output/
+helm-rendered/
+
+############################
+# Infrastructure / IaC helpers
+############################
+# Terraform (if present)
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
+terraform.tfvars.json
+
+############################
+# Logs & Runtime Artifacts
+############################
+logs/
+*.log
+*.pid
+*.out
+
+############################
+# OS / Editor
+############################
+.DS_Store
+Thumbs.db
+
+.vscode/
+.idea/
+*.swp
+*.swo
+
+############################
+# CI / Local overrides
+############################
+ci/local/
+ci/debug/

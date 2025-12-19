@@ -1,0 +1,138 @@
+# Default values for flask-kafka-apps.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 1
+
+# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+image:
+  repository: nginx
+  # This sets the pull policy for images.
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+
+# This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+# This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  type: ClusterIP
+  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+  port: 5000
+
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+
+modules:
+  flask-app-producer:
+    enabled: true
+    ingress:
+      enabled: false
+    image:
+      repository: repo-producer
+      tag: latest
+    port: 5000
+    replicas: 1
+
+  flask-app-consumer:
+    enabled: true
+    ingress:
+      enabled: false
+    image:
+      repository: repo-consumer
+      tag: latest
+    port: 5000
+    replicas: 1
+
+
+defaults:
+  resources:
+    limits:
+      cpu: "6"
+      memory: "8Gi"
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+  hpa:
+    enabled: true
+    minReplicas: 4
+    maxReplicas: 4
+    cpuUtilization: 80
+    memoryUtilization: 80
+  healthCheck:
+    enabled: true
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 5000
+      initialDelaySeconds: 120  # Longer startup time
+      failureThreshold: 5
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: 5000
+      initialDelaySeconds: 120
+      failureThreshold: 5
+  secrets:
+    - name: repo-secrets
+
+
+
+# Global configuration
+global:
+
+  namespace: "retrunbuild"
+
+  environment: prod
+  
+  imageTag: v1.1.0
+  
+  imagePullSecrets:
+    - name: retrunbuild
+  
+  labels:
+    app.kubernetes.io/part-of: retrunbuild-backend
+
+
